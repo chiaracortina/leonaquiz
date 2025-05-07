@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Quiz Leona</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        text-align: center;
+      }
+      img {
+        max-width: 200px;
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin: 20px 0 5px;
+        text-align: left;
+      }
+      select,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+      }
+      #dropdown {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+        cursor: pointer;
+        margin-bottom: 20px;
+        position: relative;
+      }
+      #dropdown::after {
+        content: "▼";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+      #checkboxes {
+        display: none;
+        margin-top: 10px;
+        text-align: left;
+        border: 1px solid #ccc;
+        padding: 10px;
+        background: #f9f9f9;
+      }
+      #checkboxes label {
+        display: block;
+      }
+      #result {
+        font-weight: bold;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="leona-logo.png" alt="Leona logo" />
+    <h1>¿Cuánto tiempo podrías ahorrar con Leona?</h1>
+
+    <form id="quizForm">
+      <label
+        >¿Aproximadamente, cuántos pacientes te escriben por WhatsApp a la
+        semana?</label
+      >
+      <select id="pacientes">
+        <option value="10">10–30</option>
+        <option value="30">30–70</option>
+        <option value="70">70+</option>
+      </select>
+
+      <label
+        >¿Qué tipo de preguntas sueles recibir? (puedes elegir varias)</label
+      >
+      <div id="dropdown">
+        Selecciona...
+        <div id="checkboxes">
+          <label><input type="checkbox" value="1" /> Citas</label>
+          <label><input type="checkbox" value="3" /> Dudas médicas</label>
+          <label><input type="checkbox" value="4" /> Facturación</label>
+          <label><input type="checkbox" value="2" /> Otros</label>
+        </div>
+      </div>
+
+      <label>¿Quién contesta los mensajes?</label>
+      <select id="responde">
+        <option value="1">Yo</option>
+        <option value="0.7">Mi asistente</option>
+        <option value="0.85">Ambos</option>
+      </select>
+
+      <button type="submit">Ver resultado</button>
+    </form>
+
+    <div id="result" style="display: none"></div>
+
+    <div id="funFact" style="display: none; margin-top: 20px">
+      <p id="funText"></p>
+      <img
+        id="funGif"
+        src=""
+        alt=""
+        style="max-width: 150px; margin-top: 10px"
+      />
+    </div>
+
+    <div id="calendarLink" style="display: none; margin-top: 20px">
+      <a
+        href="https://calendly.com/chiara-leona/acceso-prioritario-a-leona"
+        target="_blank"
+        >Agendar demo ahora (ACCESO PRIORITARIO)</a
+      >
+    </div>
+
+    <script src="funfacts.js"></script>
+
+    <script>
+      const dropdown = document.getElementById("dropdown");
+      const checkboxes = document.getElementById("checkboxes");
+
+      dropdown.addEventListener("click", function (e) {
+        if (e.target.tagName !== "INPUT") {
+          checkboxes.style.display =
+            checkboxes.style.display === "none" ? "block" : "none";
+        }
+      });
+
+      function roundToHalf(num) {
+        return Math.round(num * 2) / 2;
+      }
+
+      document
+        .getElementById("quizForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const pacientes = parseInt(
+            document.getElementById("pacientes").value
+          );
+          const responde = parseFloat(
+            document.getElementById("responde").value
+          );
+
+          const selectedTypes = Array.from(
+            document.querySelectorAll(
+              '#checkboxes input[type="checkbox"]:checked'
+            )
+          ).map((cb) => parseInt(cb.value));
+
+          // Inflar volumen
+          const volumenMultiplicador =
+            pacientes === 10 ? 2 : pacientes === 30 ? 3 : 4;
+
+          // Promedio de minutos por mensaje
+          const minutosPorMensaje =
+            selectedTypes.length > 0
+              ? selectedTypes.reduce(
+                  (sum, val) =>
+                    sum + (val === 1 ? 2 : val === 2 ? 5 : val === 3 ? 3 : 4),
+                  0
+                ) / selectedTypes.length
+              : 4;
+
+          // Suma 60 minutos extra por semana (caos, interrupciones, etc.)
+          let totalMinutosSemana =
+            pacientes * minutosPorMensaje * responde * volumenMultiplicador +
+            60;
+
+          let tiempoEstimado = totalMinutosSemana / 60; // en horas
+
+          // Mínimo 1 hora
+          tiempoEstimado = Math.max(tiempoEstimado, 1);
+          tiempoEstimado = roundToHalf(tiempoEstimado);
+
+          // Calcular ahorro
+          const ahorroPorcentaje = selectedTypes.includes(2) ? 0.3 : 0.3;
+          let tiempoAhorro = tiempoEstimado * ahorroPorcentaje;
+
+          // Ajustar ahorro
+          tiempoAhorro = Math.min(tiempoAhorro, tiempoEstimado);
+          tiempoAhorro = Math.max(tiempoAhorro, 1);
+          tiempoAhorro = roundToHalf(tiempoAhorro);
+
+          document.getElementById("result").style.display = "block";
+          document.getElementById(
+            "result"
+          ).textContent = `Actualmente dedicas aproximadamente ${tiempoEstimado} horas a la semana en WhatsApp. Con Leona podrás ahorrar hasta ${tiempoAhorro} horas.`;
+
+          let selectedRange = funFacts.find(
+            (range) =>
+              tiempoAhorro >= range.minHours && tiempoAhorro <= range.maxHours
+          );
+
+          if (!selectedRange) {
+            const sortedRanges = [...funFacts].sort(
+              (a, b) => b.minHours - a.minHours
+            );
+            selectedRange = sortedRanges.find(
+              (range) => tiempoAhorro >= range.minHours
+            );
+          }
+
+          if (selectedRange && selectedRange.options.length > 0) {
+            const randomOption =
+              selectedRange.options[
+                Math.floor(Math.random() * selectedRange.options.length)
+              ];
+            document.getElementById("funFact").style.display = "block";
+            document.getElementById(
+              "funText"
+            ).textContent = `Equivalente a: ${randomOption.text}`;
+            document.getElementById("funGif").src = randomOption.gif;
+          } else {
+            document.getElementById("funFact").style.display = "none";
+          }
+
+          document.getElementById("calendarLink").style.display = "block";
+        });
+    </script>
+  </body>
+</html>
